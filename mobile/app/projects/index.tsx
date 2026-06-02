@@ -9,6 +9,7 @@ import axios from 'axios';
 import { useTheme } from '../theme';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000';
+const CACHE_KEY_PROJECTS = 'projects:list';
 
 interface ClimateProject {
   id: string;
@@ -29,6 +30,7 @@ export default function ProjectsScreen() {
   const [filteredProjects, setFilteredProjects] = useState<ClimateProject[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(false);
 
   useEffect(() => {
     loadProjects();
@@ -50,10 +52,20 @@ export default function ProjectsScreen() {
   const loadProjects = async () => {
     try {
       const res = await axios.get(`${API_URL}/api/projects`);
-      setProjects(res.data.data);
-      setFilteredProjects(res.data.data);
+      const data = res.data.data;
+      setProjects(data);
+      setFilteredProjects(data);
+      setIsOffline(false);
+      await setCachedData(CACHE_KEY_PROJECTS, data);
     } catch (error) {
-      console.error('Error loading projects:', error);
+      const cached = await getCachedData<ClimateProject[]>(CACHE_KEY_PROJECTS);
+      if (cached) {
+        setProjects(cached.data);
+        setFilteredProjects(cached.data);
+        setIsOffline(true);
+      } else {
+        console.error('Error loading projects:', error);
+      }
     } finally {
       setLoading(false);
     }
@@ -189,5 +201,15 @@ const styles = StyleSheet.create({
   donorCount: {
     fontSize: 12,
     marginTop: 8,
+  },
+  offlineBanner: {
+    backgroundColor: '#f5a623',
+    padding: 8,
+    alignItems: 'center',
+  },
+  offlineBannerText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });
