@@ -53,6 +53,12 @@ export default function DonateScreen() {
       return;
     }
 
+    const confirmed = await authenticate('Confirm donation with biometrics or PIN');
+    if (!confirmed) {
+      Alert.alert('Authentication Required', 'You must authenticate to sign a transaction');
+      return;
+    }
+
     setLoading(true);
 
     try {
