@@ -1,4 +1,6 @@
 #![no_std]
+#[cfg(all(test, feature = "testutils"))]
+mod fuzz_tests;
 
 /**
  * contracts/greenpay-contract/src/lib.rs
