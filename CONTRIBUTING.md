@@ -1,8 +1,12 @@
-# 🤝 Contributing to Stellar GreenPay
+# Contributing to GreenPay
 
-Thank you for helping build transparent climate finance! Every contribution — big or small — matters.
+## Getting started
 
----
+1. Fork and clone the repo.
+2. Install dependencies: `pnpm install` (root workspace).
+3. Copy `.env.example` to `.env` and fill in the required values.
+4. Start the backend: `pnpm --filter backend dev`.
+5. Start the mobile app: `pnpm --filter mobile start`.
 
 ## ✅ Prerequisites
 
@@ -84,56 +88,38 @@ cd frontend && npm run dev  # → http://localhost:3000
 
 ---
 
-## 🌿 Branch Naming
+## Performance expectations
 
-```
-feature/impact-nft-badges
-fix/leaderboard-sort-bug
-docs/soroban-contract-guide
-contracts/implement-co2-tracking
-chore/upgrade-stellar-sdk
-```
+The donations API **must** sustain 100 concurrent users with a **p95 latency
+under 500 ms**. This is validated by the k6 load test.
 
----
+Before merging any change to `POST /api/donations` or the Stellar submission
+pipeline:
 
-## 💬 Commit Style
-
-```
-feat: add donor leaderboard page
-fix: correct CO2 offset calculation
-docs: update contract deployment guide
-contracts: implement impact NFT minting
-chore: upgrade soroban-sdk to 21.0
+```bash
+# Requires k6 — brew install k6
+k6 run scripts/load-test.js
 ```
 
----
+The test enforces the p95 threshold as a hard check. A failed threshold means
+the PR is not mergeable until the regression is resolved.
 
-## 🔃 Pull Request Process
+See [docs/performance.md](docs/performance.md) for the full target table and
+how to record baseline numbers.
 
-1. Branch from `main`
-2. Make your changes and test on Testnet
-3. Open a PR against `main`
-4. Fill in the PR template and link the issue (`Closes #123`)
-5. Wait for review — we respond within 48 hours
+## Wallet & Stellar guidelines
 
----
+- Never log or persist private keys anywhere in the codebase.
+- Mobile: use `expo-secure-store` for all key-adjacent data (see
+  `mobile/src/hooks/useWallet.ts`).
+- Extension: use `window.freighter.signTransaction` — never ask the user for
+  their secret key.
+- All Stellar transactions target the **testnet** unless `NETWORK=mainnet` is
+  explicitly set in the environment.
 
-## 📁 Project Structure
+## Testing
 
+```bash
+pnpm test          # unit + integration
+pnpm test:e2e      # end-to-end (requires running backend + Horizon testnet)
 ```
-stellar-greenpay/
-├── frontend/
-│   ├── components/     ← Reusable UI components
-│   ├── pages/          ← Next.js routes
-│   ├── lib/            ← Stellar SDK + wallet + API helpers
-│   └── utils/          ← Types, formatting, constants
-├── backend/
-│   └── src/
-│       ├── routes/     ← Express routes
-│       ├── services/   ← Business logic
-│       └── middleware/ ← Auth, rate limiting
-├── contracts/          ← Soroban smart contracts (Rust)
-└── docs/               ← Architecture & API docs
-```
-
-Look for `good first issue` labels for beginner-friendly tasks!
